@@ -10,6 +10,7 @@ const healthRoute = require("./src/routes/health");
 const registerRoute = require("./src/routes/register");
 const syncRoute = require("./src/routes/sync");
 const { attach: attachWs } = require("./src/ws");
+const keepalive = require("./src/keepalive");
 
 const app = express();
 
@@ -42,4 +43,5 @@ attachWs(server);
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`[sdmesh] mesh server listening on :${PORT}`);
+  keepalive.start(PORT);
 });

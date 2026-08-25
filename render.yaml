@@ -20,3 +20,5 @@ services:
         value: /opt/render/project/src/data/sdmesh.db
       - key: SERVER_SECRET
         generateValue: true
+      - key: KEEPALIVE_INTERVAL_MS
+        value: "40000"
