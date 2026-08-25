@@ -115,6 +115,19 @@ npm install
 npm run dev
 ```
 
+## Troubleshooting
+
+**Build fails compiling `better-sqlite3` with errors like `PropertyCallbackInfo has no member named 'This'` or deprecated `v8::External::Value()`.**
+This happens when Render builds against a very new Node version (e.g. 26.x)
+whose V8 headers changed APIs that this native module's compiled version
+relies on — it's a Node/V8 mismatch, not an app bug. This repo pins Node to
+`20.18.1` via `.node-version`, `package.json#engines`, and `NODE_VERSION` in
+`render.yaml`. If Render is still picking a different Node version, check the
+service's Environment tab and confirm no `NODE_VERSION` override or newer
+default is taking precedence. If you'd rather track newer Node, instead
+upgrade `better-sqlite3` to a release that's confirmed to compile against
+that Node/V8 combination.
+
 ## Notes / intentional simplifications
 
 - Auth tokens are HMAC(node_id) bearer tokens issued at registration, not a

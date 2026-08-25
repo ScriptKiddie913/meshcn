@@ -12,6 +12,8 @@ services:
       mountPath: /opt/render/project/src/data
       sizeGB: 1
     envVars:
+      - key: NODE_VERSION
+        value: 20.18.1
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
