@@ -5,8 +5,6 @@ const db = require("../db");
 const { requireAuth } = require("../auth");
 const { appendEvents, eventsSince, currentGlobalSeq } = require("../events");
 const { touch } = require("../registry");
-const { broadcast } = require("../ws");
-
 const router = express.Router();
 
 const getBackupStmt = db.prepare(`SELECT blob, updated_at FROM backups WHERE node_id = ?`);
@@ -17,32 +15,28 @@ const upsertBackupStmt = db.prepare(`
 
 /**
  * POST /sync
- * body: { since_global_seq: number, new_events: [{ client_event_id, event_type, payload, signature, timestamp }] }
- *
- * Accepts events the client has that the server is missing, and returns
- * events the server has that the client is missing (based on the client's
- * last known global_seq watermark). This is how server recovery works after
- * a Render outage: the client reports what it has, the server fills the gap.
+ * body: { since_global_seq: number, limit?: number, new_events: [...] }
  */
 router.post("/sync", requireAuth, express.json({ limit: "2mb" }), (req, res) => {
   const nodeId = req.nodeId;
-  const { since_global_seq: since = 0, new_events: newEvents = [] } = req.body || {};
+  const { since_global_seq: since = 0, limit = 500, new_events: newEvents = [] } = req.body || {};
 
   touch(nodeId);
 
   let inserted = [];
   if (Array.isArray(newEvents) && newEvents.length > 0) {
     inserted = appendEvents(nodeId, newEvents.slice(0, 500));
-    if (inserted.length > 0) {
-      broadcast({ type: "sync_events", events: inserted }, nodeId);
-    }
   }
 
-  const missingEvents = eventsSince(since);
+  // Paginated sync (S14)
+  const syncPage = eventsSince(since, limit);
 
   res.json({
     accepted: inserted.map((e) => e.client_event_id),
-    missing_events: missingEvents,
+    missing_events: syncPage.items, // backward compatibility
+    items: syncPage.items,
+    next_cursor: syncPage.next_cursor,
+    has_more: syncPage.has_more,
     global_seq: currentGlobalSeq(),
   });
 });

@@ -1,0 +1,8 @@
+# Tor Configuration for sdmesh-server hidden service
+SocksPort 0
+DataDirectory /var/lib/tor
+HiddenServiceDir /opt/render/project/src/data/tor/hs
+HiddenServiceVersion 3
+HiddenServicePort 80 127.0.0.1:3001
+HiddenServiceEnableIntroDoSDefense 1
+Log notice stdout
